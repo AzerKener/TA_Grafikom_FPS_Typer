@@ -6,7 +6,7 @@ import math
 app = Ursina()
 
 # Daftar kata istilah IT
-IT_WORDS_EASY = ['DATA', 'CODE', 'RIM', 'BUG', 'WEB', 'PING', 'LINK']
+IT_WORDS_EASY = ['DATA', 'CODE', 'RIM', 'BEGO', 'WEB', 'PING', 'LINK']
 IT_WORDS_MEDIUM = ['PYTHON', 'SERVER', 'ROUTER', 'MATRIX', 'COOKIE', 'BACKEND']
 IT_WORDS_HARD = ['COMPILER', 'DATABASE', 'ALGORITHM', 'FIREWALL', 'ENCRYPTION']
 
