@@ -172,8 +172,8 @@ player_weapon = Entity(
 player_weapon.visible = False
 
 # ── Spawn Constants ───────────────────────────────────────────────────────────
-SPAWN_MIN_DIST  = 18
-SPAWN_MAX_DIST  = 26
+SPAWN_MIN_DIST  = 15
+SPAWN_MAX_DIST  = 20
 SPAWN_MIN_SEP   = 3.5
 SPAWN_MAX_TRIES = 30
 GRACE_PERIOD    = 2.5
@@ -585,11 +585,11 @@ def find_safe_spawn_position():
         cz        = player.z + math.cos(angle) * dist_val
         candidate = Vec3(cx, 2, cz)
 
-        if distance_2d(candidate, player.position) < SPAWN_MIN_DIST:
+        if distance(candidate, player.position) < SPAWN_MIN_DIST:
             continue
 
         too_close = any(
-            distance_2d(candidate, e.position) < SPAWN_MIN_SEP
+            distance(candidate, e.position) < SPAWN_MIN_SEP
             for e in enemies_list
         )
         if not too_close:
@@ -610,7 +610,9 @@ class Enemy(Entity):
         spawn_pos = find_safe_spawn_position()
         super().__init__(
             model='quad', texture='zombie.png',
-            position=spawn_pos, scale=(2, 2.5), billboard=True
+            position=spawn_pos, 
+            scale=(4, 5), 
+            billboard=True
         )
         self.word     = word
         self.speed    = random.uniform(0.4, 0.7) + (current_wave * 0.05)
@@ -618,8 +620,12 @@ class Enemy(Entity):
         self.can_move = False
 
         self.text_label = Text(
-            text=self.word, parent=self, position=(0, 0.6, 0),
-            scale=3, origin=(0, 0), background=True,
+            text=self.word, 
+            parent=self, 
+            position=(0, 0.7, 0),
+            scale=4.5,
+            origin=(0, 0), 
+            background=True,
             color=color.white, billboard=True
         )
         minimap_dots[self] = Entity(
@@ -639,7 +645,7 @@ class Enemy(Entity):
         if self in minimap_dots:
             minimap_dots[self].position = (rel_x, rel_z)
 
-        if distance_2d(self.position, player.position) < 1.5:
+        if distance(self.position, player.position) < 1.5:
             reduce_player_hp()
             remove_enemy_completely(self)
             global active_target
@@ -687,7 +693,7 @@ class Boss(Entity):
         if self in minimap_dots:
             minimap_dots[self].position = (rel_x, rel_z)
 
-        if distance_2d(self.position, player.position) < 1.5:
+        if distance(self.position, player.position) < 1.5:
             reduce_player_hp()
             self.position = find_safe_spawn_position()
 
@@ -815,7 +821,7 @@ def auto_lock_nearest_enemy():
     global active_target, current_input_index, _lock_requested
     _lock_requested = False
     if enemies_list and not game_over and not is_boss_wave:
-        active_target       = min(enemies_list, key=lambda e: distance_2d(e.position, player.position))
+        active_target       = min(enemies_list, key=lambda e: distance(e.position, player.position))
         current_input_index = 0
         update_text_visual()
     else:
