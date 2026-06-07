@@ -193,8 +193,12 @@ wave_grace_active = False
 # MAIN SCREENS LOGIC
 # ═══════════════════════════════════════════════════════════════════════════════
 home_bg = Entity(
-    parent=camera.ui, model='quad',
-    color=color.rgba(0, 0, 0, 220), scale=(2, 2), z=2   
+    parent=camera.ui, 
+    model='quad',
+    texture='home_blur.png',   # MEMAKAI GAMBAR LATAR BLUR KAMU
+    color=color.white,         # Set ke white agar warna asli gambar blur keluar sempurna
+    scale=(2, 2), 
+    z=2   
 )
 home_title = Text(
     text='FPS TYPER\nEDUKASI IT', parent=camera.ui,
@@ -415,7 +419,23 @@ def _set_game_ui_visible(v):
     ui_target_box.visible = v; ui_typing_progress.visible = v; ui_stats.visible = v; ui_announcement.visible = v; minimap_bg.visible = v; player_weapon.visible = v
 
 def start_game():
-    global app_state; app_state = 'playing'
+    global app_state; 
+    app_state = 'playing'
+    home_bg.animate_color(color.rgba(255, 255, 255, 0), duration=0.5, curve=curve.linear)
+    for e in home_elements:
+        if e != home_bg:
+            e.visible = False
+            
+    # Beri jeda 0.5 detik (menunggu animasi fade out selesai) baru masuk ke permainan
+    def launch():
+        home_bg.visible = False
+        _set_game_ui_visible(True)
+        mouse.locked  = True
+        mouse.visible = False
+        bg_music.play()
+        spawn_wave()
+        
+    invoke(launch, delay=0.5)
     _set_home_visible(False); _set_settings_visible(False); _set_game_ui_visible(True)
     # Kembalikan sensitivitas kamera ke 0 agar mouse bebas bergerak tapi kamera dikunci auto-lock
     player.mouse_sensitivity = Vec2(0, 0) 
