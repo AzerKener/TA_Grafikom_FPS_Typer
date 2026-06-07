@@ -58,27 +58,72 @@ player_weapon = Entity(
     scale=(0.4, 0.4), position=(0.4, -0.3), z=-2
 )
 
+# ── Spawn Safety Constants ────────────────────────────────────────────────────
+SPAWN_MIN_DIST   = 18    # Jarak minimum dari player saat spawn
+SPAWN_MAX_DIST   = 26    # Jarak maksimum dari player saat spawn
+SPAWN_MIN_SEP    = 3.5   # Jarak minimum antar sesama enemy saat spawn
+SPAWN_MAX_TRIES  = 30    # Batas percobaan cari posisi aman (hindari infinite loop)
+GRACE_PERIOD     = 2.5   # Detik sebelum enemy mulai bergerak setelah wave spawn
+
+# ── Grace Period State ────────────────────────────────────────────────────────
+wave_grace_active = False
+
+def find_safe_spawn_position():
+    """
+    Cari posisi spawn yang:
+    1. Cukup jauh dari player (>= SPAWN_MIN_DIST)
+    2. Tidak terlalu dekat dengan enemy lain (>= SPAWN_MIN_SEP)
+    Jika tidak ditemukan dalam SPAWN_MAX_TRIES percobaan, paksa posisi minimum safe.
+    """
+    for _ in range(SPAWN_MAX_TRIES):
+        angle        = random.uniform(0, 2 * math.pi)
+        dist_val     = random.uniform(SPAWN_MIN_DIST, SPAWN_MAX_DIST)
+        candidate_x  = player.x + math.sin(angle) * dist_val
+        candidate_z  = player.z + math.cos(angle) * dist_val
+        candidate    = Vec3(candidate_x, 2, candidate_z)
+
+        # Cek jarak ke player
+        if distance_2d(candidate, player.position) < SPAWN_MIN_DIST:
+            continue
+
+        # Cek jarak ke enemy yang sudah ada
+        too_close = False
+        for existing in enemies_list:
+            if distance_2d(candidate, existing.position) < SPAWN_MIN_SEP:
+                too_close = True
+                break
+
+        if not too_close:
+            return candidate
+
+    # Fallback: paksa spawn di titik aman paling jauh jika semua percobaan gagal
+    angle = random.uniform(0, 2 * math.pi)
+    return Vec3(
+        player.x + math.sin(angle) * SPAWN_MAX_DIST,
+        2,
+        player.z + math.cos(angle) * SPAWN_MAX_DIST
+    )
+
+
 # ============================================================
 # Enemy Class
 # ============================================================
 class Enemy(Entity):
     def __init__(self, word):
-        angle    = random.uniform(0, 2 * math.pi)
-        distance_val = random.uniform(12, 18)
-        spawn_x  = math.sin(angle) * distance_val
-        spawn_z  = math.cos(angle) * distance_val
+        spawn_pos = find_safe_spawn_position()
 
         super().__init__(
             model='quad',
-            texture='.png',
-            position=(spawn_x, 2, spawn_z),
+            texture='musuh.png',
+            position=spawn_pos,
             scale=(2, 2.5),
             billboard=True
         )
 
-        self.word  = word
-        self.speed = random.uniform(0.4, 0.7) + (current_wave * 0.05)
-        self.alive = True   # FIX BUG 1 — flag eksplisit
+        self.word        = word
+        self.speed       = random.uniform(0.4, 0.7) + (current_wave * 0.05)
+        self.alive       = True   # flag eksplisit (anti-destroy race condition)
+        self.can_move    = False  # grace period — enemy diam dulu saat baru spawn
 
         self.text_label = Text(
             text=self.word, parent=self, position=(0, 0.6, 0),
@@ -94,7 +139,11 @@ class Enemy(Entity):
         if game_over or not self.alive:
             return
 
-        target_pos = Vec3(0, self.y, 0)
+        # Grace period — tunggu sinyal can_move sebelum mulai maju
+        if not self.can_move:
+            return
+
+        target_pos = Vec3(player.x, self.y, player.z)   # kejar posisi player aktual
         self.look_at_2d(target_pos, 'y')
         self.position += self.forward * self.speed * time.dt
 
@@ -294,13 +343,25 @@ def update_text_visual():
 # ============================================================
 # Wave Management
 # ============================================================
+def activate_all_enemies():
+    """Dipanggil setelah grace period — semua enemy mulai bergerak serentak."""
+    global wave_grace_active
+    wave_grace_active = False
+    for e in enemies_list:
+        if e.alive:
+            e.can_move = True
+    ui_announcement.text = ''
+
+
 def spawn_wave():
-    global current_wave, game_over
+    global current_wave, game_over, wave_grace_active
     if game_over:
         return
 
-    ui_announcement.text = ''
-    ui_stats.text = f'HP: {player_hp} | WAVE: {current_wave}'
+    wave_grace_active        = True
+    ui_stats.text            = f'HP: {player_hp} | WAVE: {current_wave}'
+    ui_announcement.color    = color.orange
+    ui_announcement.text     = f'WAVE {current_wave}\nBERSIAP...'
 
     num_enemies = current_wave * 3
     for _ in range(num_enemies):
@@ -311,10 +372,12 @@ def spawn_wave():
         else:
             word = random.choice(IT_WORDS_MEDIUM + IT_WORDS_HARD)
 
-        enemy = Enemy(word)
+        enemy = Enemy(word)          # can_move = False saat spawn
         enemies_list.append(enemy)
 
     invoke(auto_lock_nearest_enemy, delay=0.1)
+    # Setelah GRACE_PERIOD detik, semua enemy mulai bergerak
+    invoke(activate_all_enemies, delay=GRACE_PERIOD)
 
 
 def check_wave_clear():
