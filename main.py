@@ -69,10 +69,9 @@ _lock_requested     = False
 # ── Tema Map setelah Boss ────────────────────────────────────────────────────
 # Kombinasi warna untuk (Ground_Color, Sky_Color)
 MAP_THEMES = [
-    (color.dark_gray, color.light_gray),                         # Tema 1: Default awal
-    (color.rgba(40, 20, 20, 255), color.black),                  # Tema 2: Cyber Punk / Underworld
-    (color.rgba(20, 40, 20, 255), color.rgba(10, 20, 30, 255)),  # Tema 3: Matrix / Toxic Neon
-    (color.rgba(70, 50, 20, 255), color.orange),                 # Tema 4: Apocalypse
+    {'ground': 'white_cube',       'sky': 'sky_default'}, # Tema 1: Bawaan awal
+    {'ground': 'lantai_cyber.jpg', 'sky': 'langit_cyber.jpg'}, # Tema 2: Ganti nama file sesuai asetmu
+    {'ground': 'lantai_lava.png',  'sky': 'langit_lava.jpg'}                # Tema 4: Apocalypse
 ]
 current_theme_index = 0
 
@@ -94,7 +93,7 @@ ground = Entity(
 )
 
 # Ambil objek Sky ke variabel agar bisa diganti warnanya lewat animasi
-game_sky = Sky()
+game_sky = Sky(texture=MAP_THEMES[0]['sky'])
 
 # ── Player ────────────────────────────────────────────────────────────────────
 player = FirstPersonController()
@@ -241,8 +240,12 @@ gameover_elements = [gameover_bg, gameover_title, gameover_score, btn_main_lagi,
 def show_gameover_screen():
     global app_state
     app_state = 'gameover'
-    mouse.locked  = False
+    
+    # PERBAIKAN AGRESSIVE MOUSE UNLOCK
+    player.mouse_sensitivity = Vec2(0, 0) # Matikan sensitivitas kamera
+    mouse.locked = False
     mouse.visible = True
+    
     _set_game_ui_visible(False)
     hide_boss_ui()
     ui_word_def.visible = False
@@ -276,8 +279,8 @@ def restart_game():
     _typo_active        = False
     current_theme_index = 0
 
-    ground.color = MAP_THEMES[0][0]
-    game_sky.color = MAP_THEMES[0][1]
+    ground.texture = MAP_THEMES[0]['ground']
+    game_sky.texture = MAP_THEMES[0]['sky']
 
     for dot in list(minimap_dots.values()):
         destroy(dot)
@@ -326,8 +329,8 @@ def back_to_menu():
     _typo_active        = False
     current_theme_index = 0
 
-    ground.color = MAP_THEMES[0][0]
-    game_sky.color = MAP_THEMES[0][1]
+    ground.texture = MAP_THEMES[0]['ground']
+    game_sky.texture = MAP_THEMES[0]['sky']
 
     _set_game_ui_visible(False)
     hide_boss_ui()
@@ -414,6 +417,8 @@ def _set_game_ui_visible(v):
 def start_game():
     global app_state; app_state = 'playing'
     _set_home_visible(False); _set_settings_visible(False); _set_game_ui_visible(True)
+    # Kembalikan sensitivitas kamera ke 0 agar mouse bebas bergerak tapi kamera dikunci auto-lock
+    player.mouse_sensitivity = Vec2(0, 0) 
     mouse.locked = True; mouse.visible = False; bg_music.play(); spawn_wave()
 
 def open_settings():
@@ -697,7 +702,11 @@ def update():
 def input(key):
     global active_target, current_input_index, boss_word_index, boss_letter_index, boss_entity
 
-    if app_state != 'playing' or game_over: return
+    if app_state != 'playing' :
+        return
+    
+    if game_over: 
+        return
 
     # ── INPUT ENGINE: BOSS WAVE ──────────────────────────────────────────────
     if is_boss_wave and boss_entity and boss_entity.alive:
@@ -770,15 +779,15 @@ def defeat_boss():
     is_boss_wave = False
     hide_boss_ui()
 
-    # ── LOGIKA BARU: PENGGANTIAN LATAR BELAKANG MAP MAP SECARA REALTIME ──────
+    # ── LOGIKA PERBAIKAN: GANTI TEKSTUR MAP SECARA AMAN ──────────────────────
     current_theme_index = (current_theme_index + 1) % len(MAP_THEMES)
-    new_ground_color, new_sky_color = MAP_THEMES[current_theme_index]
+    next_theme = MAP_THEMES[current_theme_index]
     
-    # Animasi warna berpindah secara halus berdurasi 1.5 detik
-    ground.animate_color(new_ground_color, duration=1.5)
-    game_sky.animate_color(new_sky_color, duration=1.5)
+    # FIX: Ganti tekstur secara langsung (tidak menggunakan .animate_color)
+    ground.texture = next_theme['ground']
+    game_sky.texture = next_theme['sky']
     
-    # Efek flash portal putih transisi dimensi layar
+    # Efek flash putih tetap berjalan untuk menyamarkan transisi perubahan tekstur
     flash = Entity(parent=camera.ui, model='quad', scale=(2,2), color=color.white, z=-1)
     flash.animate_color(color.rgba(255,255,255,0), duration=1.0, curve=curve.linear)
     destroy(flash, delay=1.1)
