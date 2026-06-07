@@ -219,25 +219,101 @@ class MenuButton(Button):
             parent=camera.ui,
             text=label,
             position=pos,
-            scale=(0.30, 0.30), 
-            texture=texture_file, 
+            scale=(0.28, 0.09), # Skala proporsional untuk aset tombol pixel-art kamu
+            texture=texture_file,
             z=0
         )
-        
         self.color = color.white
-        self.highlight_color = color.rgba(255, 255, 255, 180) 
+        self.highlight_color = color.rgba(255, 255, 255, 180)
         self.pressed_color   = color.rgba(200, 200, 200, 255)
         
-       
         if self.text_entity:
             self.text_entity.color = color.cyan
+        else:
+            # SIKAT HABIS: Jika string kosong, pastikan tidak ada komponen teks sisa
+            self.text_entity = None
             
         self.on_click = action
 
 # Tulis ini terlebih dahulu (di atas fungsi _set_game_ui_visible)
-btn_mulai          = MenuButton('', (0, -0.08), lambda: start_game(), 'Mulai.png')
-btn_settings       = MenuButton('', (0, -0.20), lambda: open_settings(), 'Setting.png')
-btn_keluar         = MenuButton('', (0, -0.32), application.quit, 'Keluar.png')
+# Sumbu Y diatur renggang (dari -0.05, turun ke -0.18, lalu ke -0.31)
+def start_game():
+    global app_state 
+    app_state = 'playing'
+    home_bg.animate_color(color.rgba(255, 255, 255, 0), duration=0.5, curve=curve.linear)
+    for e in home_elements:
+        if e != home_bg:
+            e.visible = False
+            
+    def launch():
+        home_bg.visible = False
+        _set_game_ui_visible(True)
+        mouse.locked  = False
+        mouse.visible = True
+        bg_music.play()
+        spawn_wave()
+        
+    invoke(launch, delay=0.5)
+    _set_home_visible(False); _set_settings_visible(False); _set_game_ui_visible(True)
+    
+    player.mouse_sensitivity = Vec2(0, 0) 
+    mouse.locked = True; mouse.visible = False; bg_music.play(); spawn_wave()
+
+def open_settings():
+    global app_state
+    app_state = 'settings'
+    _set_home_visible(False)
+    _set_game_ui_visible(False)
+    _set_settings_visible(True)
+    
+    mouse.locked = False
+    mouse.visible = True
+
+def close_settings():
+    global app_state
+    app_state = 'home'
+    _set_settings_visible(False)
+    _set_home_visible(True)
+    mouse.locked = False
+    mouse.visible = True
+
+def open_in_game_settings():
+    global app_state
+    app_state = 'settings'
+    _set_game_ui_visible(False)
+    hide_boss_ui()
+    _set_settings_visible(True)
+    for e in enemies_list:
+        e.can_move = False
+    if boss_entity:
+        boss_entity.can_move = False
+        
+    btn_back.on_click = lambda: close_in_game_settings()
+
+def close_in_game_settings():
+    global app_state
+    app_state = 'playing'
+    
+    # Sembunyikan kembali panel setting
+    _set_settings_visible(False)
+    
+    # Munculkan kembali UI gameplay dan senjata
+    _set_game_ui_visible(True)
+    if is_boss_wave:
+        show_boss_ui()
+        if boss_entity:
+            boss_entity.can_move = True
+    else:
+        # JALANKAN KEMBALI semua musuh normal (Resume)
+        for e in enemies_list:
+            e.can_move = True
+            
+    # Kembalikan fungsi tombol KEMBALI (btn_back) ke setelan pabrik (ke menu utama/Home)
+    btn_back.on_click = lambda: close_settings()
+
+btn_mulai    = MenuButton('', (0, -0.05), lambda: start_game(), 'Mulai.png')
+btn_settings = MenuButton('', (0, -0.18), lambda: open_settings(), 'Setting.png')
+btn_keluar   = MenuButton('', (0, -0.31), application.quit, 'Udah.png') 
 
 btn_ingame_back    = MenuButton('', (-0.75, -0.4),  lambda: back_to_menu(), 'Udah.png')
 btn_ingame_back.scale = (0.22, 0.075)
@@ -255,7 +331,30 @@ btn_ingame_setting = MenuButton(
     texture_file='Setting.png'    
 )
 btn_ingame_setting.scale = (0.22, 0.075) 
-btn_ingame_setting.visible = False       
+btn_ingame_setting.visible = False 
+
+def _set_home_visible(v):
+    home_bg.visible = v
+    home_title.visible = v
+    home_subtitle.visible = v  # PASTIKAN INI ADA agar teks "Ketik kata..." bisa sembunyi
+    btn_mulai.visible = v
+    btn_settings.visible = v
+    btn_keluar.visible = v
+def _set_settings_visible(v):
+    for e in settings_elements: e.visible = v
+    slider_musik.set_visible(v); slider_sfx.set_visible(v)
+# POSISIKAN BLOK INI DI BAWAH DEKLARASI TOMBOL TADI
+def _set_game_ui_visible(v):
+    ui_target_box.visible      = v
+    ui_typing_progress.visible = v
+    ui_stats.visible           = v
+    ui_announcement.visible    = v
+    minimap_bg.visible         = v
+    player_weapon.visible      = v
+    
+    # Sekarang Python sudah mengenali variabel ini karena sudah dibuat di atas!
+    btn_ingame_back.visible    = v  
+    btn_ingame_setting.visible = v  
 
 home_elements = [home_bg, home_title, home_subtitle, btn_mulai, btn_settings, btn_keluar]
 
@@ -445,91 +544,17 @@ slider_musik = VolumeSlider('MUSIK',  (0.08, 0.1),  vol_musik, _set_vol_musik)
 slider_sfx   = VolumeSlider('SFX',   (0.08, 0.0),  vol_sfx,   _set_vol_sfx)
 slider_musik.set_visible(False); slider_sfx.set_visible(False)
 
-btn_back = MenuButton('KEMBALI', (0, -0.18), lambda: close_settings())
+btn_back = MenuButton('', (0, -0.22), lambda: close_settings(), 'Balik.png')
+
+btn_back.scale = (0.28, 0.09) 
+btn_back.z = -2
 btn_back.visible = False
 settings_elements = [settings_bg, settings_title, btn_back]
 
 # ── TRANSISI STATE FUNCTION ───────────────────────────────────────────────────
-def _set_home_visible(v):
-    for e in home_elements: e.visible = v
-def _set_settings_visible(v):
-    for e in settings_elements: e.visible = v
-    slider_musik.set_visible(v); slider_sfx.set_visible(v)
-# POSISIKAN BLOK INI DI BAWAH DEKLARASI TOMBOL TADI
-def _set_game_ui_visible(v):
-    ui_target_box.visible      = v
-    ui_typing_progress.visible = v
-    ui_stats.visible           = v
-    ui_announcement.visible    = v
-    minimap_bg.visible         = v
-    player_weapon.visible      = v
-    
-    # Sekarang Python sudah mengenali variabel ini karena sudah dibuat di atas!
-    btn_ingame_back.visible    = v  
-    btn_ingame_setting.visible = v  
 
-def start_game():
-    global app_state 
-    app_state = 'playing'
-    home_bg.animate_color(color.rgba(255, 255, 255, 0), duration=0.5, curve=curve.linear)
-    for e in home_elements:
-        if e != home_bg:
-            e.visible = False
-            
-    def launch():
-        home_bg.visible = False
-        _set_game_ui_visible(True)
-        mouse.locked  = False
-        mouse.visible = True
-        bg_music.play()
-        spawn_wave()
-        
-    invoke(launch, delay=0.5)
-    _set_home_visible(False); _set_settings_visible(False); _set_game_ui_visible(True)
-    
-    player.mouse_sensitivity = Vec2(0, 0) 
-    mouse.locked = True; mouse.visible = False; bg_music.play(); spawn_wave()
 
-def open_in_game_settings():
-    global app_state
-    app_state = 'settings'
-    
-    # Munculkan panel setting dan slider volume
-    _set_settings_visible(True)
-    
-    # Sembunyikan UI gameplay dan senjata agar tidak menumpuk dengan menu setting
-    _set_game_ui_visible(False)
-    hide_boss_ui()
-    
-    # HENTIKAN pergerakan semua musuh (Pause)
-    for e in enemies_list:
-        e.can_move = False
-    if boss_entity:
-        boss_entity.can_move = False
-        
-    # Ubah fungsi tombol KEMBALI (btn_back) di menu setting agar mengarah ke game lagi, bukan ke Home
-    btn_back.on_click = lambda: close_in_game_settings()
 
-def close_in_game_settings():
-    global app_state
-    app_state = 'playing'
-    
-    # Sembunyikan kembali panel setting
-    _set_settings_visible(False)
-    
-    # Munculkan kembali UI gameplay dan senjata
-    _set_game_ui_visible(True)
-    if is_boss_wave:
-        show_boss_ui()
-        if boss_entity:
-            boss_entity.can_move = True
-    else:
-        # JALANKAN KEMBALI semua musuh normal (Resume)
-        for e in enemies_list:
-            e.can_move = True
-            
-    # Kembalikan fungsi tombol KEMBALI (btn_back) ke setelan pabrik (ke menu utama/Home)
-    btn_back.on_click = lambda: close_settings()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TYPO & FEEDBACK VISUAL LOGIC
