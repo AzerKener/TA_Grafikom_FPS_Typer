@@ -4,13 +4,9 @@ import random
 import math
 
 app = Ursina()
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# APP STATE  —  'home' | 'settings' | 'playing'
-# ═══════════════════════════════════════════════════════════════════════════════
 app_state = 'home'
 
-# ── Kosakata IT ───────────────────────────────────────────────────────────────
+
 IT_WORDS_EASY   = ['DATA', 'CODE', 'RAM', 'BOOLEAN', 'SHELL', 'PING', 'LINK']
 IT_WORDS_MEDIUM = ['PYTHON', 'SERVER', 'ROUTER', 'MATRIX', 'COOKIE', 'BACKEND']
 IT_WORDS_HARD   = ['COMPILER', 'DATABASE', 'ALGORITHM', 'FIREWALL', 'ENCRYPTION']
@@ -47,6 +43,12 @@ BOSS_PARAGRAPHS = [
     "ALGORITMA ADALAH LANGKAH LANGKAH LOGIS DAN SISTEMATIS YANG DIGUNAKAN UNTUK MENYELESAIKAN SUATU MASALAH KOMPUTASI",
     "KEAMANAN SIBER BERTUJUAN MELINDUNGI SISTEM JARINGAN DAN PROGRAM DARI SERANGAN DIGITAL YANG MERUSAK DATA",
 ]
+BOSS_TEXTURES = [
+    'Boss_1.png',    # Untuk Boss Paragraf 1
+    'Boss_2.png',
+    'Boss_3.png',
+    'Boss_4.png',
+]
 
 # ── Game State ────────────────────────────────────────────────────────────────
 current_wave        = 1
@@ -67,11 +69,11 @@ boss_total_words    = 0
 _lock_requested     = False
 
 # ── Tema Map setelah Boss ────────────────────────────────────────────────────
-# Kombinasi warna untuk (Ground_Color, Sky_Color)
 MAP_THEMES = [
-    {'ground': 'white_cube',       'sky': 'sky_default'}, # Tema 1: Bawaan awal
-    {'ground': 'lantai_cyber.jpg', 'sky': 'langit_cyber.jpg'}, # Tema 2: Ganti nama file sesuai asetmu
-    {'ground': 'lantai_lava.png',  'sky': 'langit_lava.jpg'}                # Tema 4: Apocalypse
+    {'ground': 'Lantai_map1.png',       'sky': 'Map_1.png'}, 
+    {'ground': 'Lantai_map2.png',       'sky': 'Map_2.png'}, 
+    {'ground': 'Lantai_map3.png',       'sky': 'Map_3.png'}, 
+    {'ground': 'Lantai_map4.png',       'sky': 'Map_4.png'}, 
 ]
 current_theme_index = 0
 
@@ -109,6 +111,8 @@ mouse.visible = True
 DirectionalLight(y=10, z=-10, rotation=(45, 30, 0))
 
 # ── UI Dasar ─────────────────────────────────────────────────────────────────
+
+
 ui_target_box      = Text(text='', position=(0, -0.3),  origin=(0, 0), scale=2.5, background=False, color=color.yellow)
 ui_typing_progress = Text(text='', position=(0, -0.05), origin=(0, 0), scale=1.8, color=color.green)
 ui_stats           = Text(text=f'HP: {player_hp} | WAVE: {current_wave}', position=(-0.85, 0.45), scale=2, background=True, color=color.cyan)
@@ -195,14 +199,14 @@ wave_grace_active = False
 home_bg = Entity(
     parent=camera.ui, 
     model='quad',
-    texture='home_blur.png',   # MEMAKAI GAMBAR LATAR BLUR KAMU
-    color=color.white,         # Set ke white agar warna asli gambar blur keluar sempurna
+    texture='home_blur.png',   
+    color=color.white,         
     scale=(2, 2), 
     z=2   
 )
 home_title = Text(
     text='FPS TYPER\nEDUKASI IT', parent=camera.ui,
-    origin=(0, 0), position=(0, 0.22), scale=5, color=color.cyan, z=0   
+    origin=(0, 0), position=(0, 0.22), scale=5, color=color.black, z=0   
 )
 home_subtitle = Text(
     text='Ketik kata untuk mengalahkan musuh', parent=camera.ui,
@@ -210,19 +214,48 @@ home_subtitle = Text(
 )
 
 class MenuButton(Button):
-    def __init__(self, label, pos, action):
+    def __init__(self, label, pos, action, texture_file=None):
         super().__init__(
-            parent=camera.ui, text=label, position=pos, scale=(0.30, 0.072), z=0
+            parent=camera.ui,
+            text=label,
+            position=pos,
+            scale=(0.30, 0.30), 
+            texture=texture_file, 
+            z=0
         )
-        self.color           = color.rgba(15, 15, 15, 230)
-        self.highlight_color = color.rgba(0, 190, 230, 220)
-        self.pressed_color   = color.rgba(0, 130, 170, 255)
-        self.text_entity.color = color.cyan
+        
+        self.color = color.white
+        self.highlight_color = color.rgba(255, 255, 255, 180) 
+        self.pressed_color   = color.rgba(200, 200, 200, 255)
+        
+       
+        if self.text_entity:
+            self.text_entity.color = color.cyan
+            
         self.on_click = action
 
-btn_mulai    = MenuButton('MULAI GAME', (0, -0.08), lambda: start_game())
-btn_settings = MenuButton('SETTING',    (0, -0.20), lambda: open_settings())
-btn_keluar   = MenuButton('KELUAR',     (0, -0.32), application.quit)
+# Tulis ini terlebih dahulu (di atas fungsi _set_game_ui_visible)
+btn_mulai          = MenuButton('', (0, -0.08), lambda: start_game(), 'Mulai.png')
+btn_settings       = MenuButton('', (0, -0.20), lambda: open_settings(), 'Setting.png')
+btn_keluar         = MenuButton('', (0, -0.32), application.quit, 'Keluar.png')
+
+btn_ingame_back    = MenuButton('', (-0.75, -0.4),  lambda: back_to_menu(), 'Udah.png')
+btn_ingame_back.scale = (0.22, 0.075)
+btn_ingame_back.visible = False
+
+btn_ingame_setting = MenuButton('', (-0.75, -0.28), lambda: open_in_game_settings(), 'Setting.png')
+btn_ingame_setting.scale = (0.22, 0.075)
+btn_ingame_setting.visible = False
+
+# ── TOMBOL SETTING AUDIO SAAT PLAYING (MENGGUNAKAN Setting.png) ───────────────
+btn_ingame_setting = MenuButton(
+    label='', 
+    pos=(-0.75, -0.28),          
+    action=lambda: open_in_game_settings(), 
+    texture_file='Setting.png'    
+)
+btn_ingame_setting.scale = (0.22, 0.075) 
+btn_ingame_setting.visible = False       
 
 home_elements = [home_bg, home_title, home_subtitle, btn_mulai, btn_settings, btn_keluar]
 
@@ -246,7 +279,7 @@ def show_gameover_screen():
     app_state = 'gameover'
     
     # PERBAIKAN AGRESSIVE MOUSE UNLOCK
-    player.mouse_sensitivity = Vec2(0, 0) # Matikan sensitivitas kamera
+    player.mouse_sensitivity = Vec2(0, 0) 
     mouse.locked = False
     mouse.visible = True
     
@@ -262,6 +295,9 @@ def restart_game():
     global player_hp, game_over, is_boss_wave, boss_entity
     global boss_words, boss_word_index, boss_letter_index, boss_total_words
     global _lock_requested, wave_grace_active, _typo_active, current_theme_index
+    current_theme_index = 0
+    ground.texture = MAP_THEMES[0]['ground']
+    game_sky.texture = MAP_THEMES[0]['sky']
 
     for e in gameover_elements:
         e.visible = False
@@ -304,6 +340,10 @@ def back_to_menu():
     global player_hp, game_over, is_boss_wave, boss_entity
     global boss_words, boss_word_index, boss_letter_index, boss_total_words
     global _lock_requested, wave_grace_active, _typo_active, current_theme_index
+    current_theme_index = 0
+    ground.texture = MAP_THEMES[0]['ground']
+    game_sky.texture = MAP_THEMES[0]['sky']
+    btn_back.on_click = lambda: close_settings()
 
     for e in gameover_elements:
         e.visible = False
@@ -415,41 +455,81 @@ def _set_home_visible(v):
 def _set_settings_visible(v):
     for e in settings_elements: e.visible = v
     slider_musik.set_visible(v); slider_sfx.set_visible(v)
+# POSISIKAN BLOK INI DI BAWAH DEKLARASI TOMBOL TADI
 def _set_game_ui_visible(v):
-    ui_target_box.visible = v; ui_typing_progress.visible = v; ui_stats.visible = v; ui_announcement.visible = v; minimap_bg.visible = v; player_weapon.visible = v
+    ui_target_box.visible      = v
+    ui_typing_progress.visible = v
+    ui_stats.visible           = v
+    ui_announcement.visible    = v
+    minimap_bg.visible         = v
+    player_weapon.visible      = v
+    
+    # Sekarang Python sudah mengenali variabel ini karena sudah dibuat di atas!
+    btn_ingame_back.visible    = v  
+    btn_ingame_setting.visible = v  
 
 def start_game():
-    global app_state; 
+    global app_state 
     app_state = 'playing'
     home_bg.animate_color(color.rgba(255, 255, 255, 0), duration=0.5, curve=curve.linear)
     for e in home_elements:
         if e != home_bg:
             e.visible = False
             
-    # Beri jeda 0.5 detik (menunggu animasi fade out selesai) baru masuk ke permainan
     def launch():
         home_bg.visible = False
         _set_game_ui_visible(True)
-        mouse.locked  = True
-        mouse.visible = False
+        mouse.locked  = False
+        mouse.visible = True
         bg_music.play()
         spawn_wave()
         
     invoke(launch, delay=0.5)
     _set_home_visible(False); _set_settings_visible(False); _set_game_ui_visible(True)
-    # Kembalikan sensitivitas kamera ke 0 agar mouse bebas bergerak tapi kamera dikunci auto-lock
+    
     player.mouse_sensitivity = Vec2(0, 0) 
     mouse.locked = True; mouse.visible = False; bg_music.play(); spawn_wave()
 
-def open_settings():
-    global app_state; app_state = 'settings'
-    _set_home_visible(False); _set_settings_visible(True)
-    mouse.locked = False; mouse.visible = True
+def open_in_game_settings():
+    global app_state
+    app_state = 'settings'
+    
+    # Munculkan panel setting dan slider volume
+    _set_settings_visible(True)
+    
+    # Sembunyikan UI gameplay dan senjata agar tidak menumpuk dengan menu setting
+    _set_game_ui_visible(False)
+    hide_boss_ui()
+    
+    # HENTIKAN pergerakan semua musuh (Pause)
+    for e in enemies_list:
+        e.can_move = False
+    if boss_entity:
+        boss_entity.can_move = False
+        
+    # Ubah fungsi tombol KEMBALI (btn_back) di menu setting agar mengarah ke game lagi, bukan ke Home
+    btn_back.on_click = lambda: close_in_game_settings()
 
-def close_settings():
-    global app_state; app_state = 'home'
-    _set_settings_visible(False); _set_home_visible(True)
-    mouse.locked = False; mouse.visible = True
+def close_in_game_settings():
+    global app_state
+    app_state = 'playing'
+    
+    # Sembunyikan kembali panel setting
+    _set_settings_visible(False)
+    
+    # Munculkan kembali UI gameplay dan senjata
+    _set_game_ui_visible(True)
+    if is_boss_wave:
+        show_boss_ui()
+        if boss_entity:
+            boss_entity.can_move = True
+    else:
+        # JALANKAN KEMBALI semua musuh normal (Resume)
+        for e in enemies_list:
+            e.can_move = True
+            
+    # Kembalikan fungsi tombol KEMBALI (btn_back) ke setelan pabrik (ke menu utama/Home)
+    btn_back.on_click = lambda: close_settings()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TYPO & FEEDBACK VISUAL LOGIC
@@ -519,7 +599,7 @@ class Enemy(Entity):
     def update(self):
         if game_over or not self.alive or not self.can_move: return
 
-        # PERBAIKAN: Hitung arah maju absolut tanpa merusak billboard paksaan sumbu Y
+        
         direction = (player.position - self.position).normalized()
         direction.y = 0
         self.position += direction * self.speed * time.dt
@@ -528,9 +608,9 @@ class Enemy(Entity):
         rel_z = clamp(self.z * 0.02, -0.45, 0.45)
         if self in minimap_dots: minimap_dots[self].position = (rel_x, rel_z)
 
-        # PERBAIKAN: Deteksi jarak absolut Pythagoras sumbu X & Z tanah murni
+        
         if math.hypot(self.x - player.x, self.z - player.z) < 1.5:
-            reduce_player_hp()
+            reduce_player_hp(amount=1)  # <--- Musuh biasa hanya mencicil 1 HP
             remove_enemy_completely(self)
             global active_target
             if active_target == self: reset_targeting()
@@ -540,12 +620,15 @@ class Enemy(Entity):
 # BOSS ENTITY
 # ─────────────────────────────────────────────────────────────────────────────
 class Boss(Entity):
-    def __init__(self, paragraph_str):
+    def __init__(self, paragraph_str, boss_texture):
         spawn_pos = find_safe_spawn_position()
         super().__init__(
-            model='quad', texture='pokeball.png',
-            position=spawn_pos, scale=(5, 6), billboard=True,
-            color=color.rgba(255, 60, 60, 255)
+            model='quad', 
+            texture=boss_texture, 
+            position=spawn_pos, 
+            scale=(5, 6), 
+            billboard=True,
+            color=color.white      
         )
         self.alive    = True
         self.can_move = False
@@ -564,7 +647,7 @@ class Boss(Entity):
     def update(self):
         if game_over or not self.alive or not self.can_move: return
 
-        # PERBAIKAN: Gerak maju lurus absolut 
+        
         direction = (player.position - self.position).normalized()
         direction.y = 0
         self.position += direction * self.speed * time.dt
@@ -573,9 +656,11 @@ class Boss(Entity):
         rel_z = clamp(self.z * 0.02, -0.45, 0.45)
         if self in minimap_dots: minimap_dots[self].position = (rel_x, rel_z)
 
-        # PERBAIKAN: Deteksi jarak absolut Pythagoras sumbu X & Z tanah murni
+        
         if math.hypot(self.x - player.x, self.z - player.z) < 1.5:
-            reduce_player_hp()
+            reduce_player_hp(amount=2)  # <--- BOSS MEMBERIKAN 2 DAMAGE SEKALIGUS! (Lebih sakit)
+            
+            # Setelah menabrak pemain, Boss diteleportasi menjauh agar pemain punya kesempatan mengetik lagi
             self.position = find_safe_spawn_position()
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -589,16 +674,21 @@ def remove_enemy_completely(enemy_obj):
         destroy(minimap_dots[enemy_obj]); del minimap_dots[enemy_obj]
     destroy(enemy_obj)
 
-def reduce_player_hp():
+def reduce_player_hp(amount=1):  # TAMBAHKAN parameter amount
     global player_hp, game_over
-    if game_over: return
-    player_hp -= 1
+    if game_over: 
+        return
+        
+    player_hp -= amount  # Kurangi HP sesuai jumlah damage yang dikirim
     ui_stats.text = f'HP: {player_hp} | WAVE: {current_wave}'
 
-    damage_overlay.color = color.rgba(255, 255, 255, 200)
+    # Buat efek darah di layar lebih pekat/merah jika terkena hit besar dari Boss
+    overlay_alpha = 200 if amount == 1 else 255
+    damage_overlay.color = color.rgba(255, 255, 255, overlay_alpha)
     damage_overlay.animate_color(color.rgba(255, 255, 255, 0), duration=0.6)
 
-    player_weapon.y = -0.35; player_weapon.animate_y(-0.3, duration=0.2)
+    player_weapon.y = -0.35
+    player_weapon.animate_y(-0.3, duration=0.2)
 
     if player_hp <= 0:
         game_over = True
@@ -799,19 +889,18 @@ def defeat_boss():
     is_boss_wave = False
     hide_boss_ui()
 
-    # ── LOGIKA PERBAIKAN: GANTI TEKSTUR MAP SECARA AMAN ──────────────────────
+    # Logika pergeseran indeks tema map (0 -> 1 -> 2 -> 3)
     current_theme_index = (current_theme_index + 1) % len(MAP_THEMES)
     next_theme = MAP_THEMES[current_theme_index]
     
-    # FIX: Ganti tekstur secara langsung (tidak menggunakan .animate_color)
+   
     ground.texture = next_theme['ground']
     game_sky.texture = next_theme['sky']
     
-    # Efek flash putih tetap berjalan untuk menyamarkan transisi perubahan tekstur
+    # Efek flash portal putih transisi dimensi layar
     flash = Entity(parent=camera.ui, model='quad', scale=(2,2), color=color.white, z=-1)
     flash.animate_color(color.rgba(255,255,255,0), duration=1.0, curve=curve.linear)
     destroy(flash, delay=1.1)
-    # ─────────────────────────────────────────────────────────────────────────
 
     check_wave_clear()
 
@@ -819,11 +908,16 @@ def spawn_boss():
     global boss_entity, boss_words, boss_word_index, boss_letter_index, boss_total_words, wave_grace_active
     wave_grace_active = False
 
+    # Menghitung indeks boss berdasarkan wave saat ini
     boss_wave_index = max(0, (current_wave - 3) // 2)
     boss_wave_index = min(boss_wave_index, len(BOSS_PARAGRAPHS) - 1)
-    paragraph       = BOSS_PARAGRAPHS[boss_wave_index]
+    
+    paragraph = BOSS_PARAGRAPHS[boss_wave_index]
+    
+    chosen_texture = BOSS_TEXTURES[boss_wave_index]
 
-    boss_entity       = Boss(paragraph)
+    
+    boss_entity       = Boss(paragraph, chosen_texture)
     boss_words        = boss_entity.words
     boss_word_index   = 0; boss_letter_index = 0; boss_total_words = boss_entity.total_words
 
