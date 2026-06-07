@@ -11,7 +11,7 @@ app = Ursina()
 app_state = 'home'
 
 # ── Kosakata IT ───────────────────────────────────────────────────────────────
-IT_WORDS_EASY   = ['DATA', 'CODE', 'RIM', 'BENAR', 'AYO', 'PING', 'LINK']
+IT_WORDS_EASY   = ['DATA', 'CODE', 'RAM', 'BOOLEAN', 'SHELL', 'PING', 'LINK']
 IT_WORDS_MEDIUM = ['PYTHON', 'SERVER', 'ROUTER', 'MATRIX', 'COOKIE', 'BACKEND']
 IT_WORDS_HARD   = ['COMPILER', 'DATABASE', 'ALGORITHM', 'FIREWALL', 'ENCRYPTION']
 
@@ -20,9 +20,9 @@ WORD_DEFINITIONS = {
     # Easy
     'DATA'       : 'Fakta/angka mentah yang belum diolah',
     'CODE'       : 'Instruksi tertulis yang dijalankan komputer',
-    'RIM'        : 'Singkatan: Random-access / Read-in Memory',
-    'BENAR'      : 'Output valid dari suatu operasi logika',
-    'AYO'        : 'Prompt interaktif di command-line shell',
+    'RAM'        : 'Singkatan: Random-access / Read-in Memory',
+    'BOOLEAN'    : 'Output valid dari suatu operasi logika',
+    'SHELL'      : 'Prompt interaktif di command-line shell',
     'PING'       : 'Uji latensi jaringan ke host tujuan',
     'LINK'       : 'Tautan atau referensi ke sumber daya lain',
     # Medium
