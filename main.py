@@ -7,8 +7,8 @@ app = Ursina()
 app_state = 'home'
 
 
-IT_WORDS_EASY   = ['DATA', 'CODE', 'RAM', 'BOOLEAN', 'SHELL', 'PING', 'LINK']
-IT_WORDS_MEDIUM = ['PYTHON', 'SERVER', 'ROUTER', 'MATRIX', 'COOKIE', 'BACKEND']
+IT_WORDS_EASY   = ['DATA', 'CODE', 'RAM', 'CPU', 'SHELL', 'PING', 'LINK']
+IT_WORDS_MEDIUM = ['PYTHON', 'SERVER', 'ROUTER', 'MEMORY', 'COOKIE', 'BACKEND']
 IT_WORDS_HARD   = ['COMPILER', 'DATABASE', 'ALGORITHM', 'FIREWALL', 'ENCRYPTION']
 
 # Kamus arti kata untuk feedback edukasi
@@ -17,7 +17,7 @@ WORD_DEFINITIONS = {
     'DATA'       : 'Fakta/angka mentah yang belum diolah',
     'CODE'       : 'Instruksi tertulis yang dijalankan komputer',
     'RAM'        : 'Singkatan: Random-access / Read-in Memory',
-    'BOOLEAN'    : 'Output valid dari suatu operasi logika',
+    'CPU'        : 'Otak utama komputer yang memproses instruksi',
     'SHELL'      : 'Prompt interaktif di command-line shell',
     'PING'       : 'Uji latensi jaringan ke host tujuan',
     'LINK'       : 'Tautan atau referensi ke sumber daya lain',
@@ -25,7 +25,7 @@ WORD_DEFINITIONS = {
     'PYTHON'     : 'Bahasa pemrograman tingkat tinggi, populer di AI',
     'SERVER'     : 'Komputer yang menyediakan layanan ke klien',
     'ROUTER'     : 'Perangkat yang meneruskan paket antar jaringan',
-    'MATRIX'     : 'Susunan data dalam baris dan kolom (array 2D)',
+    'MEMORY'     : 'Tempat penyimpanan data dan instruksi yang digunakan komputer',
     'COOKIE'     : 'Data kecil yang disimpan browser dari server',
     'BACKEND'    : 'Sisi server: logika, DB, API — tidak terlihat user',
     # Hard
