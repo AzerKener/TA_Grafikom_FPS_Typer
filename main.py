@@ -7,27 +7,27 @@ app = Ursina()
 app_state = 'home'
 
 
-IT_WORDS_EASY   = ['DATA', 'CODE', 'RAM', 'CPU', 'SHELL', 'PING', 'LINK']
-IT_WORDS_MEDIUM = ['PYTHON', 'SERVER', 'ROUTER', 'MEMORY', 'COOKIE', 'BACKEND']
+IT_WORDS_EASY = ['DATA', 'CODE', 'RAM', 'CPU', 'FILE', 'PING', 'LINK']
+IT_WORDS_MEDIUM = ['PYTHON', 'SERVER', 'ROUTER', 'MEMORY', 'COOKIE', 'NETWORK']
 IT_WORDS_HARD   = ['COMPILER', 'DATABASE', 'ALGORITHM', 'FIREWALL', 'ENCRYPTION']
 
 # Kamus arti kata untuk feedback edukasi
 WORD_DEFINITIONS = {
     # Easy
-    'DATA'       : 'Fakta/angka mentah yang belum diolah',
-    'CODE'       : 'Instruksi tertulis yang dijalankan komputer',
-    'RAM'        : 'Singkatan: Random-access / Read-in Memory',
-    'CPU'        : 'Otak utama komputer yang memproses instruksi',
-    'SHELL'      : 'Prompt interaktif di command-line shell',
-    'PING'       : 'Uji latensi jaringan ke host tujuan',
-    'LINK'       : 'Tautan atau referensi ke sumber daya lain',
+    'DATA' : 'Fakta atau informasi yang dapat diolah komputer',
+    'CODE' : 'Instruksi yang ditulis untuk dijalankan komputer',
+    'RAM'  : 'Memori sementara yang digunakan saat program berjalan',
+    'CPU'  : 'Otak utama komputer yang memproses instruksi',
+    'FILE' : 'Kumpulan data yang disimpan di komputer',
+    'PING' : 'Perintah untuk menguji koneksi jaringan',
+    'LINK' : 'Tautan menuju halaman atau sumber daya lain',
     # Medium
-    'PYTHON'     : 'Bahasa pemrograman tingkat tinggi, populer di AI',
-    'SERVER'     : 'Komputer yang menyediakan layanan ke klien',
-    'ROUTER'     : 'Perangkat yang meneruskan paket antar jaringan',
-    'MEMORY'     : 'Tempat penyimpanan data dan instruksi yang digunakan komputer',
-    'COOKIE'     : 'Data kecil yang disimpan browser dari server',
-    'BACKEND'    : 'Sisi server: logika, DB, API — tidak terlihat user',
+   'PYTHON'  : 'Bahasa pemrograman yang populer dan mudah dipelajari',
+    'SERVER'  : 'Komputer yang menyediakan layanan ke pengguna',
+    'ROUTER'  : 'Perangkat yang menghubungkan beberapa jaringan',
+    'MEMORY'  : 'Tempat penyimpanan data dan instruksi komputer',
+    'COOKIE'  : 'Data kecil yang disimpan oleh browser',
+    'NETWORK' : 'Kumpulan perangkat yang saling terhubung untuk bertukar data',
     # Hard
     'COMPILER'   : 'Program yang mengubah kode sumber ke kode mesin',
     'DATABASE'   : 'Kumpulan data terstruktur yang bisa diquery',
